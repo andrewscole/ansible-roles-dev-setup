@@ -1,6 +1,10 @@
 ---
 awscli:
-  url: "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
+  aws_package:
+    aarch64: awscli-exe-linux-aarch64.zip
+    x86_64: awscli-exe-linux-x86_64.zip
+
+  url: "https://awscli.amazonaws.com/{{ aws_package.ansible_architecture }}"
   dest: "/tmp/"
   unpacked_path: "/tmp/aws"
   configuration:
