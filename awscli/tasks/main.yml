@@ -1,0 +1,62 @@
+---
+- name: check if awscli is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/aws
+  register: aws_installed
+  tags:
+    - aws
+- name: print installtion results
+  ansible.builtin.debug:
+    msg: "{% if aws_installed.stat.exists %} aws found, skipping to config {% else %} aws not found, proceeding with installation {% endif %}"
+  tags:
+    - aws
+
+- name: install aswcli deps
+  ansible.builtin.include_role:
+    name: apt_package_installer
+  when: not aws_installed.stat.exists
+  tags:
+    - aws
+
+- name: download and unpack archived installer
+  ansible.builtin.unarchive:
+    src: "{{ awscli.url }}"
+    dest: "{{ awscli.dest }}"
+    remote_src: yes
+  when: not aws_installed.stat.exists
+  tags: 
+    - aws
+
+- name: install awscli
+  ansible.builtin.command:  "{{ awscli.unpacked_path }}/install"
+  when: not aws_installed.stat.exists
+  tags:
+    - aws
+
+
+- name: clean up installation zip and folder
+  ansible.builtin.file:
+    path: "{{ awscli.unpacked_path }}"
+    state: absent
+  tags:
+    - aws
+
+- name: make folder for awscli credentials
+  ansible.builtin.file:
+    path: "{{ user_info.home }}/.aws"
+    state: directory
+    mode: 0775
+    owner: "{{ user_info.name }}"
+    group: "{{ user_info.name }}"
+  tags:
+    - aws
+
+# You should use vault if this is not a local VM 
+- name: template awscli config
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ user_info.home }}/.aws/{{ item }}"
+    mode: '0600'
+  with_items: "{{ awscli.configuration.files }}"
+  tags:
+    - aws  

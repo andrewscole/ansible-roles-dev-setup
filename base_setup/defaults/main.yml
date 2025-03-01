@@ -1,0 +1,37 @@
+---
+base_setup:
+  copy_base_files:
+    - {src: "aliases", dest: "{{ user_info.home }}/.bash_aliases"}
+    - {src: "gitignore_global", dest: "{{ user_info.home }}/.gitignore_global"}
+  development_folders:
+    - src
+    - tools
+
+# define packages, dependencies, and repos for general packages here
+apt_package_installer:  
+  packages:
+    - vim
+    - git
+    - gnupg
+    - jq
+    - curl
+    - wget
+    - dnsutils
+    - make
+    - libffi-dev
+    - build-essential
+    - rustc
+    - postgresql-client
+    - default-mysql-client 
+    - default-libmysqlclient-dev 
+    - podman
+    - software-properties-common
+  apt_keys:
+    - { url: "https://apt.releases.hashicorp.com/gpg", 
+        dest: "/usr/share/keyrings/hashicorp-archive-keyring.asc"
+      }
+  apt_repos:
+    - "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.asc] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+  apt_packages_from_repos:
+    - terraform
+    - packer

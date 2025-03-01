@@ -1,0 +1,118 @@
+---
+- name: check for existing installation
+  ansible.builtin.stat:
+    path: "{{ user_info.home }}/.pyenv"
+  register: local_pyenv
+  tags:
+    - python
+    - pyenv
+
+- name: print installtion results
+  ansible.builtin.debug:
+    msg: "{% if local_pyenv.stat.exists %} local pyenv found, skipping to pyenv installation {% else %} local pyenv not found, proceeding with installation {% endif %}"
+  tags:
+    - python
+    - pyenv
+
+
+- name: Install python packages
+  ansible.builtin.include_role:
+    name: apt_package_installer
+  tags:
+    - python
+    - pipx
+    - pyenv
+
+- name: pipx ensure path
+  ansible.builtin.command: pipx ensurepath
+  become_user: "{{ user_info.name }}"
+  tags:
+    - python
+    - pipx
+
+- name: setup pipx packages
+  community.general.pipx:
+    name: "{{ item }}"
+    state: latest
+  become_user: "{{ user_info.name }}"
+  with_items: "{{ pipx_packages }}"
+  tags:
+    - python
+    - pipx
+
+# we run into a chicken and egg issue with git clone
+# it wants to use your key if git is configured. I dislike this solution
+- name: confirm .gitconfig exists
+  ansible.builtin.stat: 
+    path: "{{ user_info.home }}/.gitconfig"
+  register: gconfile
+  when: pyenv.install
+
+  tags:
+    - python
+    - pyenv
+
+- name: move gitconfig
+  ansible.builtin.command: mv "{{ user_info.home }}/.gitconfig" "{{ user_info.home }}/backup_gitconfig"
+  when: pyenv.install and gconfile.stat.exists and not local_pyenv.stat.exists
+  tags:
+    - python
+    - pyenv
+
+- name: clone pyenv and pyenv virtualenv
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.dest }}"
+    version: "{{ item.version }}"
+    clone: yes
+  become_user: "{{ user_info.name }}"
+  with_items: "{{ pyenv.config }}"
+  when: pyenv.install and not local_pyenv.stat.exists
+  tags:
+    - python
+    - pyenv
+
+- name: move gitconfig back
+  ansible.builtin.command: mv "{{ user_info.home }}/backup_gitconfig" "{{ user_info.home }}/.gitconfig"
+  when: pyenv.install and gconfile.stat.exists and not local_pyenv.stat.exists
+  tags:
+    - python
+    - pyenv
+
+
+- name: update bashrc with pyenv settings
+  ansible.builtin.blockinfile:
+    path: "{{ user_info.home }}/.bashrc"
+    append_newline: true
+    prepend_newline: true
+    block: |
+      export PATH="$HOME/.pyenv/bin:$PATH"
+      export PYENV_ROOT="$HOME/.pyenv"
+      export PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init --path)"
+      eval "$(pyenv init -)"
+      eval "$(pyenv virtualenv-init -)"
+  become_user: "{{ user_info.name }}"
+  when: pyenv.install and not local_pyenv.stat.exists
+  tags:
+  - python
+  - pyenv
+
+- name: install pyenv version
+  ansible.builtin.shell:
+    cmd: "{{ user_info.home }}/.pyenv/bin/pyenv install {{ item }}"
+  become_user: "{{ user_info.name }}"
+  with_items: "{{ pyenv.python_versions }}"
+  when: pyenv.install
+  tags:
+  - python
+  - pyenv
+
+- name: install pyenv set default
+  ansible.builtin.shell:
+    cmd: "{{ user_info.home }}/.pyenv/bin/pyenv global {{ pyenv.default_python_version }}"
+  become_user: "{{ user_info.name }}"
+  when: pyenv.install
+  tags:
+  - python
+  - pyenv

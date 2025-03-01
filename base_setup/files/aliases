@@ -1,0 +1,9 @@
+# basic
+alias ll='ls -alt'
+alias dev='cd src'
+
+# containers
+alias docker='podman'
+alias rmi='docker rmi'
+alias images='docker images'
+alias cps='docker ps -a'

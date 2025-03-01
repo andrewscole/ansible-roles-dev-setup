@@ -1,0 +1,49 @@
+---
+apt_package_installer:  
+  packages:
+    - git
+    - wget
+    - curl 
+    - pipx
+    - make
+    - build-essential
+    - libssl-dev
+    - zlib1g-dev
+    - libbz2-dev
+    - libreadline-dev
+    - libsqlite3-dev 
+    - llvm
+    - libncursesw5-dev 
+    - xz-utils
+    - tk-dev
+    - libxml2-dev
+    - libxmlsec1-dev 
+    - libffi-dev
+    - liblzma-dev
+  apt_keys: []
+  apt_repos: []
+  apt_packages_from_repos: []
+  
+pipx_packages:
+  - pgcli
+  - ipython
+  - uv
+  - podman-compose
+
+pyenv: 
+  install: True
+  python_versions:
+    - 3.11.8
+    - 3.13.2
+  default_python_version: 3.13.2
+  config:
+    - {
+      repo: "https://github.com/pyenv/pyenv.git",
+      dest: "{{ user_info.home }}/.pyenv",
+      version: "v2.5.3"
+    }
+    - {
+      repo: "https://github.com/pyenv/pyenv-virtualenv.git",
+      dest: "{{ user_info.home }}/.pyenv/plugins/pyenv-virtualenv",
+      version: "v1.2.4"
+    }

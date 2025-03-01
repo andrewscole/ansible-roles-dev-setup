@@ -1,0 +1,56 @@
+---
+- name: Install base packages
+  ansible.builtin.import_role:
+    name:  apt_package_installer
+  tags:
+    - initial_setup 
+
+- name: make src and tools folder
+  ansible.builtin.file:
+    path: "{{ user_info.home }}/{{ item }}"
+    state: directory
+    mode: '0751'
+    owner: "{{ user_info.name }}"
+    group: "{{ user_info.name  }}"
+  with_items: "{{ base_setup.development_folders }}"
+  tags:
+    - initial_setup 
+
+# bash aliases
+- name: copy setup files
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ user_info.name }}"
+    group: "{{ user_info.name  }}"
+    mode: '0644'
+  with_items: "{{ base_setup.copy_base_files }}"
+  tags:
+    - initial_setup 
+
+- name: source bash aliases
+  ansible.builtin.lineinfile:
+    dest: "{{ user_info.home }}/.bashrc"
+    line: "source ~/.bash_aliases"
+    owner: "{{ user_info.name }}"
+  tags:
+    - initial_setup
+
+# git setup
+- name: configure global gitignore
+  ansible.builtin.copy:
+    src: gitignore_global
+    dest: "{{ user_info.home }}/.gitignore_global"
+    owner: "{{ user_info.name }}"
+    group: "{{ user_info.name }}"
+    mode: '0644'
+  tags:
+    - setup_git
+  
+- name: template git config
+  ansible.builtin.template:
+    src: gitconfig.j2
+    dest: "{{ user_info.home }}/.gitconfig"
+    mode: '0644'
+  tags:
+    - setup_git

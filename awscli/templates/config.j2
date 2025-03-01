@@ -1,0 +1,6 @@
+{% for profile in awscli.configuration.settings %}
+[{{ profile.profile }}]
+region = {{ profile.region }}
+output = {{ profile.output}} 
+
+{% endfor %}

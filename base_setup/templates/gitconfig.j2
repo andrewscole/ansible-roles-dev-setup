@@ -1,0 +1,33 @@
+[user]
+	name = "{{ git_setup.name }}"
+	email = "{{ git_setup.email }}"
+[merge]
+	ff = only
+[push]
+	default = current
+[core]
+	editor = /usr/bin/vim
+	excludesfile = /Users/"{{ user_info.home }}"/.gitignore_global
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
+[url "git@github.com:"]
+	insteadOf = https://github.com/
+[rerere]
+	enabled = true
+[color]
+	ui = true
+[color "diff-highlight"]
+	oldNormal = red bold
+	oldHighlight = red bold 52
+	newNormal = green bold
+	newHighlight = green bold 22
+[color "diff"]
+	meta = yellow
+	frag = magenta bold
+	commit = yellow bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse
+[commit]
+	template = ~/.gitmessage
+

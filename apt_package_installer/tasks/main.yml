@@ -1,0 +1,29 @@
+---
+- name: update system
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: yes
+
+- name: install packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{ apt_package_installer.packages }}"
+
+- name: pull apt keys
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+  with_items: "{{ apt_package_installer.apt_keys }}"
+
+- name: add repos
+  ansible.builtin.apt_repository:
+    repo: "{{ item }}"
+    state: present
+  with_items: "{{ apt_package_installer.apt_repos }}"
+
+- name: install packages from added_repos
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{ apt_package_installer.apt_packages_from_repos }}"
